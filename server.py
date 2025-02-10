@@ -223,6 +223,7 @@ def tao_don_hang():
 def lay_thong_tin_don_hang(order_id):
     """Lấy thông tin đơn hàng từ Odoo"""
     try:
+        # Lấy thông tin đơn hàng
         order = goi_odoo_api(
             model="sale.order",
             method="search_read",
@@ -275,12 +276,26 @@ def lay_thong_tin_don_hang(order_id):
             }
         )
 
-        items = [{
-            "product_id": line["product_id"][0],
-            "product_name": line["product_id"][1],
-            "quantity": line["product_uom_qty"],
-            "price": line["price_unit"]
-        } for line in order_lines]
+        # Tạo danh sách sản phẩm và tính tổng tiền
+        items = []
+        tong_so_tien = 0
+
+        for line in order_lines:
+            product_id = line["product_id"][0]
+            product_name = line["product_id"][1]
+            quantity = line["product_uom_qty"]
+            price = line["price_unit"]
+            total_price = quantity * price
+
+            items.append({
+                "product_id": product_id,
+                "product_name": product_name,
+                "quantity": quantity,
+                "price": price,
+                "total_price": total_price  # Tổng tiền cho từng sản phẩm
+            })
+
+            tong_so_tien += total_price  # Cộng dồn vào tổng số tiền đơn hàng
 
         return jsonify({
             "trang_thai": "thanh_cong",
@@ -295,13 +310,15 @@ def lay_thong_tin_don_hang(order_id):
                 "thanh_pho": shipping.get("city", ""),
                 "ma_buu_dien": shipping.get("zip", "")
             },
-            "mat_hang": items
+            "mat_hang": items,
+            "tong_so_tien": tong_so_tien  # Tổng số tiền của đơn hàng
         })
     except Exception as e:
         return jsonify({
             "trang_thai": "loi",
             "thong_bao": str(e)
         }), 500
+
 
 
 
