@@ -195,106 +195,106 @@ def lay_danh_sach_san_pham():
 
 
 
-# @app.route('/order/<int:order_id>', methods=['GET'])
-# @yeu_cau_xac_thuc_odoo
-# def lay_thong_tin_don_hang(order_id):
-#     """Lấy thông tin đơn hàng từ Odoo"""
-#     try:
-#         # Lấy thông tin đơn hàng
-#         order = goi_odoo_api(
-#             model="sale.order",
-#             method="search_read",
-#             kwargs={
-#                 "domain": [["id", "=", order_id]],
-#                 "fields": ["id", "partner_id", "partner_shipping_id", "order_line"]
-#             }
-#         )
+@app.route('/order/<int:order_id>', methods=['GET'])
+@yeu_cau_xac_thuc_odoo
+def lay_thong_tin_don_hang(order_id):
+    """Lấy thông tin đơn hàng từ Odoo"""
+    try:
+        # Lấy thông tin đơn hàng
+        order = goi_odoo_api(
+            model="sale.order",
+            method="search_read",
+            kwargs={
+                "domain": [["id", "=", order_id]],
+                "fields": ["id", "partner_id", "partner_shipping_id", "order_line"]
+            }
+        )
 
-#         if not order:
-#             return jsonify({
-#                 "trang_thai": "loi",
-#                 "thong_bao": "Không tìm thấy đơn hàng"
-#             }), 404
+        if not order:
+            return jsonify({
+                "trang_thai": "loi",
+                "thong_bao": "Không tìm thấy đơn hàng"
+            }), 404
 
-#         order = order[0]
+        order = order[0]
 
-#         # Lấy thông tin khách hàng và địa chỉ
-#         customer_id = order["partner_id"][0]
-#         shipping_id = order["partner_shipping_id"][0] if order["partner_shipping_id"] else customer_id
+        # Lấy thông tin khách hàng và địa chỉ
+        customer_id = order["partner_id"][0]
+        shipping_id = order["partner_shipping_id"][0] if order["partner_shipping_id"] else customer_id
 
-#         customer_info = goi_odoo_api(
-#             model="res.partner",
-#             method="search_read",
-#             kwargs={
-#                 "domain": [["id", "=", customer_id]],
-#                 "fields": ["name", "phone"]
-#             }
-#         )
+        customer_info = goi_odoo_api(
+            model="res.partner",
+            method="search_read",
+            kwargs={
+                "domain": [["id", "=", customer_id]],
+                "fields": ["name", "phone"]
+            }
+        )
 
-#         shipping_info = goi_odoo_api(
-#             model="res.partner",
-#             method="search_read",
-#             kwargs={
-#                 "domain": [["id", "=", shipping_id]],
-#                 "fields": ["street", "city", "zip"]
-#             }
-#         )
+        shipping_info = goi_odoo_api(
+            model="res.partner",
+            method="search_read",
+            kwargs={
+                "domain": [["id", "=", shipping_id]],
+                "fields": ["street", "city", "zip"]
+            }
+        )
 
-#         customer = customer_info[0] if customer_info else {}
-#         shipping = shipping_info[0] if shipping_info else {}
+        customer = customer_info[0] if customer_info else {}
+        shipping = shipping_info[0] if shipping_info else {}
 
-#         # Lấy thông tin mặt hàng trong đơn hàng
-#         order_lines = goi_odoo_api(
-#             model="sale.order.line",
-#             method="search_read",
-#             kwargs={
-#                 "domain": [["order_id", "=", order_id]],
-#                 "fields": ["product_id", "product_uom_qty", "price_unit"]
-#             }
-#         )
+        # Lấy thông tin mặt hàng trong đơn hàng
+        order_lines = goi_odoo_api(
+            model="sale.order.line",
+            method="search_read",
+            kwargs={
+                "domain": [["order_id", "=", order_id]],
+                "fields": ["product_id", "product_uom_qty", "price_unit"]
+            }
+        )
 
-#         # Tạo danh sách sản phẩm và tính tổng tiền
-#         items = []
-#         tong_so_tien = 0
+        # Tạo danh sách sản phẩm và tính tổng tiền
+        items = []
+        tong_so_tien = 0
 
-#         for line in order_lines:
-#             product_id = line["product_id"][0]
-#             product_name = line["product_id"][1]
-#             quantity = line["product_uom_qty"]
-#             price = line["price_unit"]
-#             total_price = quantity * price
+        for line in order_lines:
+            product_id = line["product_id"][0]
+            product_name = line["product_id"][1]
+            quantity = line["product_uom_qty"]
+            price = line["price_unit"]
+            total_price = quantity * price
 
-#             items.append({
-#                 "product_id": product_id,
-#                 "product_name": product_name,
-#                 "quantity": quantity,
-#                 "price": price,
-#                 "total_price": total_price  # Tổng tiền cho từng sản phẩm
-#             })
+            items.append({
+                "product_id": product_id,
+                "product_name": product_name,
+                "quantity": quantity,
+                "price": price,
+                "total_price": total_price  # Tổng tiền cho từng sản phẩm
+            })
 
-#             tong_so_tien += total_price  # Cộng dồn vào tổng số tiền đơn hàng
+            tong_so_tien += total_price  # Cộng dồn vào tổng số tiền đơn hàng
 
-#         return jsonify({
-#             "trang_thai": "thanh_cong",
-#             "ma_don_hang": order["id"],
-#             "khach_hang": {
-#                 "id": customer_id,
-#                 "ten": customer.get("name", ""),
-#                 "so_dien_thoai": customer.get("phone", "")
-#             },
-#             "dia_chi_giao_hang": {
-#                 "duong": shipping.get("street", ""),
-#                 "thanh_pho": shipping.get("city", ""),
-#                 "ma_buu_dien": shipping.get("zip", "")
-#             },
-#             "mat_hang": items,
-#             "tong_so_tien": tong_so_tien  # Tổng số tiền của đơn hàng
-#         })
-#     except Exception as e:
-#         return jsonify({
-#             "trang_thai": "loi",
-#             "thong_bao": str(e)
-#         }), 500
+        return jsonify({
+            "trang_thai": "thanh_cong",
+            "ma_don_hang": order["id"],
+            "khach_hang": {
+                "id": customer_id,
+                "ten": customer.get("name", ""),
+                "so_dien_thoai": customer.get("phone", "")
+            },
+            "dia_chi_giao_hang": {
+                "duong": shipping.get("street", ""),
+                "thanh_pho": shipping.get("city", ""),
+                "ma_buu_dien": shipping.get("zip", "")
+            },
+            "mat_hang": items,
+            "tong_so_tien": tong_so_tien  # Tổng số tiền của đơn hàng
+        })
+    except Exception as e:
+        return jsonify({
+            "trang_thai": "loi",
+            "thong_bao": str(e)
+        }), 500
 
 
 @app.route('/order', methods=['POST'])
@@ -378,88 +378,92 @@ def tao_don_hang():
         }), 500
 
 
-@app.route('/order', methods=['GET'])
-@yeu_cau_xac_thuc_odoo
-def lay_thong_tin_don_hang():
-    """Lấy thông tin đơn hàng gần nhất của khách hàng từ Odoo"""
-    try:
-        so_dien_thoai = request.args.get("so_dien_thoai")
-        if not so_dien_thoai:
-            return jsonify({"trang_thai": "loi", "thong_bao": "Thiếu số điện thoại"}), 400
+# @app.route('/order', methods=['GET'])
+# @yeu_cau_xac_thuc_odoo
+# def lay_thong_tin_don_hang():
+#     """Lấy thông tin đơn hàng gần nhất của khách hàng từ Odoo"""
+#     try:
+#         so_dien_thoai = request.args.get("so_dien_thoai")
+#         print(f"Số điện thoại nhận được: {so_dien_thoai}")
 
-        # Tìm khách hàng theo số điện thoại
-        khach_hang = goi_odoo_api(
-            model="res.partner",
-            method="search_read",
-            kwargs={
-                "domain": [["phone", "=", so_dien_thoai]],
-                "fields": ["id", "name", "street", "city", "state_id", "country_id"]
-            }
-        )
-        if not khach_hang:
-            return jsonify({"trang_thai": "loi", "thong_bao": "Không tìm thấy khách hàng"}), 404
+#         if not so_dien_thoai:
+#             return jsonify({"trang_thai": "loi", "thong_bao": "Thiếu số điện thoại"}), 400
 
-        khach_hang = khach_hang[0]
-        khach_hang_id = khach_hang["id"]
+#         # Tìm khách hàng theo số điện thoại
+#         khach_hang = goi_odoo_api(
+#             model="res.partner",
+#             method="search_read",
+#             kwargs={
+#                 "domain": [["phone", "=", so_dien_thoai]],
+#                 "fields": ["id", "name", "street", "city", "state_id", "country_id"]
+#             }
+#         )
+#         print(f"Kết quả tìm khách hàng: {khach_hang}")
 
-        # Ghép địa chỉ lại từ các trường
-        dia_chi = f"{khach_hang.get('street', '')}, {khach_hang.get('city', '')}, {khach_hang.get('state_id', [''])[1] if khach_hang.get('state_id') else ''}, {khach_hang.get('country_id', [''])[1] if khach_hang.get('country_id') else ''}".strip(", ")
+#         if not khach_hang:
+#             return jsonify({"trang_thai": "loi", "thong_bao": "Không tìm thấy khách hàng"}), 404
 
-        # Tìm đơn hàng nháp hoặc đơn hàng gần nhất
-        don_hang = goi_odoo_api(
-            model="sale.order",
-            method="search_read",
-            kwargs={
-                "domain": [["partner_id", "=", khach_hang_id]],
-                "fields": ["id", "partner_id", "order_line", "amount_total", "state"],
-                "order": "date_order desc",
-                "limit": 1
-            }
-        )
-        if not don_hang:
-            return jsonify({"trang_thai": "loi", "thong_bao": "Không tìm thấy đơn hàng"}), 404
+#         khach_hang = khach_hang[0]
+#         khach_hang_id = khach_hang["id"]
+#         print(f"ID khách hàng: {khach_hang_id}")
 
-        don_hang = don_hang[0]
-        order_id = don_hang["id"]
+#         # Tìm đơn hàng gần nhất
+#         don_hang = goi_odoo_api(
+#             model="sale.order",
+#             method="search_read",
+#             kwargs={
+#                 "domain": [["partner_id", "=", khach_hang_id]],
+#                 "fields": ["id", "partner_id", "order_line", "amount_total", "state"],
+#                 "order": "date_order desc",
+#                 "limit": 1
+#             }
+#         )
+#         print(f"Kết quả tìm đơn hàng: {don_hang}")
 
-        # Lấy danh sách sản phẩm trong đơn hàng
-        order_lines = goi_odoo_api(
-            model="sale.order.line",
-            method="search_read",
-            kwargs={
-                "domain": [["order_id", "=", order_id]],
-                "fields": ["product_id", "product_uom_qty", "price_unit", "price_subtotal"]
-            }
-        )
+#         if not don_hang:
+#             return jsonify({"trang_thai": "loi", "thong_bao": "Không tìm thấy đơn hàng"}), 404
 
-        # Tính tổng tiền
-        tong_tien = sum(line["price_subtotal"] for line in order_lines)
+#         don_hang = don_hang[0]
+#         order_id = don_hang["id"]
+#         print(f"Order ID: {order_id}")
 
-        items = [{
-            "product_id": line["product_id"][0],
-            "product_name": line["product_id"][1],
-            "quantity": line["product_uom_qty"],
-            "price": line["price_unit"],
-            "subtotal": line["price_subtotal"]
-        } for line in order_lines]
+#         # Lấy danh sách sản phẩm trong đơn hàng
+#         order_lines = goi_odoo_api(
+#             model="sale.order.line",
+#             method="search_read",
+#             kwargs={
+#                 "domain": [["order_id", "=", order_id]],
+#                 "fields": ["product_id", "product_uom_qty", "price_unit", "price_subtotal"]
+#             }
+#         )
+#         print(f"Sản phẩm trong đơn hàng: {order_lines}")
 
-        return jsonify({
-            "trang_thai": "thanh_cong",
-            "ma_don_hang": order_id,
-            "khach_hang": {
-                "id": khach_hang_id,
-                "ten": khach_hang["name"],
-                "so_dien_thoai": so_dien_thoai,
-                "dia_chi": dia_chi
-            },
-            "trang_thai_don_hang": don_hang["state"],
-            "tong_tien": tong_tien,
-            "mat_hang": items
-        })
-    except Exception as e:
-        return jsonify({"trang_thai": "loi", "thong_bao": str(e)}), 500
+#         # Tính tổng tiền
+#         tong_tien = sum(line["price_subtotal"] for line in order_lines)
 
+#         items = [{
+#             "product_id": line["product_id"][0],
+#             "product_name": line["product_id"][1],
+#             "quantity": line["product_uom_qty"],
+#             "price": line["price_unit"],
+#             "subtotal": line["price_subtotal"]
+#         } for line in order_lines]
 
+#         return jsonify({
+#             "trang_thai": "thanh_cong",
+#             "ma_don_hang": order_id,
+#             "khach_hang": {
+#                 "id": khach_hang_id,
+#                 "ten": khach_hang["name"],
+#                 "so_dien_thoai": so_dien_thoai
+#             },
+#             "trang_thai_don_hang": don_hang["state"],
+#             "tong_tien": tong_tien,
+#             "mat_hang": items
+#         })
+#     except Exception as e:
+#         print(f"Lỗi xảy ra: {str(e)}")
+#         return jsonify({"trang_thai": "loi", "thong_bao": str(e)}), 500
 
 
 
